@@ -20,6 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -28,6 +29,10 @@ jobs:
         id: semantic
         # Only run on non-PR events or only PRs that aren't from forks
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          SEMANTIC_RELEASE_PACKAGE: ${{ github.event.repository.name }}
         with:
           semantic_version: 19
           extra_plugins: |
@@ -35,3 +40,76 @@ jobs:
             @semantic-release/git
             @semantic-release/exec
             conventional-changelog-conventionalcommits
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Docker Meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            blockstack/${{ github.event.repository.name }}
+            hirosystems/${{ github.event.repository.name }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}},value=${{ steps.semantic.outputs.new_release_version }},enable=${{ steps.semantic.outputs.new_release_version != '' }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.semantic.outputs.new_release_version }},enable=${{ steps.semantic.outputs.new_release_version != '' }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Docker Standalone Meta
+        id: meta_standalone
+        uses: docker/metadata-action@v3
+        with:
+          images: |
+            blockstack/${{ github.event.repository.name }}-standalone
+            hirosystems/${{ github.event.repository.name }}-standalone
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}},value=${{ steps.semantic.outputs.new_release_version }},enable=${{ steps.semantic.outputs.new_release_version != '' }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.semantic.outputs.new_release_version }},enable=${{ steps.semantic.outputs.new_release_version != '' }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build/Tag/Push Image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Only push if (there's a new release on main branch, or if building a non-main branch) and (Only run on non-PR events or only PRs that aren't from forks)
+          push: ${{ (github.ref != 'refs/heads/master' || steps.semantic.outputs.new_release_version != '') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+
+      - name: Build/Tag/Push Standalone Image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          build-args: |
+            STACKS_API_VERSION=${{ github.head_ref || github.ref_name }}
+          file: docker/stx-rosetta.Dockerfile
+          tags: ${{ steps.meta_standalone.outputs.tags }}
+          labels: ${{ steps.meta_standalone.outputs.labels }}
+          # Only push if (there's a new release on main branch, or if building a non-main branch) and (Only run on non-PR events or only PRs that aren't from forks)
+          push: ${{ (github.ref != 'refs/heads/master' || steps.semantic.outputs.new_release_version != '') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+
+      - name: API Discord notification
+        if: steps.semantic.outputs.new_release_version != ''
+        uses: Ilshidur/action-discord@f1ed8844d9b33c17221fab0f36672cde39800eed
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_API_WEBHOOK }}
+          DISCORD_USERNAME: Hiro Team
+          DISCORD_AVATAR: 'https://i.imgur.com/z9Iy6ug.png'
+          DISCORD_EMBEDS: |
+            [{
+              "title": "API Release: ${{ steps.semantic.outputs.new_release_version }}",
+              "url": "https://github.com/hirosystems/stacks-blockchain-api/releases/tag/v${{ steps.semantic.outputs.new_release_version }}"
+            }]
+        with:
+          args: ":rocket: A new version (${{ steps.semantic.outputs.new_release_version }}) of the Stacks Blockchain API is available on Github!"
