@@ -1132,3 +1132,5 @@ export function doesThrow(fn: () => void) {
     return true;
   }
 }
+
+// test
