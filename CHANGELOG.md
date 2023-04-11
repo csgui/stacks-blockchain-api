@@ -1,3 +1,10 @@
+### [10.0.3](https://github.com/csgui/stacks-blockchain-api/compare/v10.0.2...v10.0.3) (2023-04-11)
+
+
+### Bug Fixes
+
+* wip on npm build issue ([584177b](https://github.com/csgui/stacks-blockchain-api/commit/584177b3f4fe2aaff2af360abfaf3f6f729c9aaa))
+
 ### [10.0.2](https://github.com/csgui/stacks-blockchain-api/compare/v10.0.1...v10.0.2) (2023-04-11)
 
 

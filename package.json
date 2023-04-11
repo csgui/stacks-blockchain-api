@@ -106,14 +106,12 @@
       [
         "@semantic-release/npm",
         {
-          "npmPublish": true,
           "pkgRoot": "./docs"
         }
       ],
       [
         "@semantic-release/npm",
         {
-          "npmPublish": true,
           "pkgRoot": "./client"
         }
       ],
