@@ -1,3 +1,24 @@
+### [10.0.1](https://github.com/csgui/stacks-blockchain-api/compare/v10.0.0...v10.0.1) (2023-04-11)
+
+
+### Bug Fixes
+
+* testing release ([9d380a1](https://github.com/csgui/stacks-blockchain-api/commit/9d380a1d897fbdabc3f029b3c3df4e9389c913c3))
+
+### [10.0.1](https://github.com/csgui/stacks-blockchain-api/compare/v10.0.0...v10.0.1) (2023-04-11)
+
+
+### Bug Fixes
+
+* testing release ([9d380a1](https://github.com/csgui/stacks-blockchain-api/commit/9d380a1d897fbdabc3f029b3c3df4e9389c913c3))
+
+### [10.0.1](https://github.com/csgui/stacks-blockchain-api/compare/v10.0.0...v10.0.1) (2023-04-11)
+
+
+### Bug Fixes
+
+* testing release ([9d380a1](https://github.com/csgui/stacks-blockchain-api/commit/9d380a1d897fbdabc3f029b3c3df4e9389c913c3))
+
 ## [7.1.5](https://github.com/hirosystems/stacks-blockchain-api/compare/v7.1.4...v7.1.5) (2023-04-07)
 
 
